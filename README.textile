@@ -1,0 +1,61 @@
+h1. Bubble Cloud Example Implementation
+
+h2. Usage
+
+h3. First Clone the Repository
+
+<pre>
+git clone git@github.com:vlandham/bubble_cloud.git
+cd vis
+</pre>
+
+h3. You might consider creating a new branch for your Vis
+
+<pre>
+git checkout -b interesting_new_bar_chart
+</pre>
+
+h3. View built in example
+
+You can start up a local webserver by using python's simple server:
+
+<pre>
+python -m SimpleHTTTPServer -p 3000
+</pre>
+
+or @thin@ in ruby
+
+<pre>
+thin start
+# might have to run 'bundle install' first
+</pre>
+
+Now go to "http://0.0.0.0:3000":http://0.0.0.0:3000/
+
+and you have a basic visualization
+
+h3. Start Coding
+
+Open up @coffee/vis.coffee@ and start modifying the built in visualization to fit your needs.
+
+h2. Folder Organization
+
+* @/@
+** main vis area
+* @/index.html@
+** main page for your visualization. Loads coffeescript and javascript files.
+* @/coffee/@
+** coffeescript files. @vis.coffee@.
+* @/data/@
+** data dump for @.csv@ and @.json@ files and other data files your vis uses.
+* @/js/@
+** javascript goes here. JS Libraries in @libs@ directory
+* @/css/@
+** put your stylesheets in here
+
+h2. Requirments
+
+To startup the server, you either need @python@, or a bunch of @ruby@ gems (should be simplified in the future).
+
+Run @bundle install@ to get the gems needed. Gems listed in the Gemfile
+
