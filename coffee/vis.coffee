@@ -4,12 +4,12 @@ root = exports ? this
 Bubbles = () ->
   # standard variables accessible to
   # the rest of the functions inside Bubbles
-  width = 970
+  width = 980
   height = 510
   data = []
   node = null
   label = null
-  margin = {top: 20, right: 10, bottom: 0, left: 10}
+  margin = {top: 5, right: 0, bottom: 0, left: 0}
   # largest size for our bubbles
   maxRadius = 65
 
@@ -74,7 +74,7 @@ Bubbles = () ->
   force = d3.layout.force()
     .gravity(0)
     .charge(0)
-    .size([width, height - 40])
+    .size([width, height])
     .on("tick", tick)
 
   # ---
@@ -86,37 +86,42 @@ Bubbles = () ->
   chart = (selection) ->
     selection.each (rawData) ->
 
+      # first, get the data in the right format
       data = transformData(rawData)
-      maxCount = d3.max(data, (d) -> d.count)
-      rScale.domain([0, maxCount])
+      # setup the radius scale's domain now that
+      # we have some data
+      maxDomainValue = d3.max(data, (d) -> rValue(d))
+      rScale.domain([0, maxDomainValue])
 
+      # a fancy way to setup svg element
       svg = d3.select(this).selectAll("svg").data([data])
-      gEnter = svg.enter().append("svg").append("g")
-      
+      svgEnter = svg.enter().append("svg")
       svg.attr("width", width + margin.left + margin.right )
       svg.attr("height", height + margin.top + margin.bottom )
-
-      g = svg.select("g")
+      
+      # node will be used to group the bubbles
+      node = svgEnter.append("g").attr("id", "bubble-nodes")
         .attr("transform", "translate(#{margin.left},#{margin.top})")
 
-      # node will be used to group the bubbles
-      node = g.append("g").attr("id", "bubble-nodes")
-
+      # clickable background rect to clear the current selection
       node.append("rect")
         .attr("id", "bubble-background")
         .attr("width", width)
         .attr("height", height)
         .on("click", clear)
 
-
       # label is the container div for all the labels that sit on top of 
       # the bubbles
+      # - remember that we are keeping the labels in plain html and 
+      #  the bubbles in svg
       label = d3.select(this).selectAll("#bubble-labels").data([data])
         .enter()
         .append("div")
         .attr("id", "bubble-labels")
 
       update()
+
+      # see if url includes an id already 
       hashchange()
 
       # automatically call hashchange when the url has changed
@@ -174,12 +179,15 @@ Bubbles = () ->
   # to work well with the font size
   # ---
   updateLabels = () ->
-    # as before, we use idValue to define what the unique id for each data 
+    # as in updateNodes, we use idValue to define what the unique id for each data 
     # point is
     label = label.selectAll(".bubble-label").data(data, (d) -> idValue(d))
 
     label.exit().remove()
 
+    # labels are anchors with div's inside them
+    # labelEnter holds our enter selection so it 
+    # is easier to append multiple elements to this selection
     labelEnter = label.enter().append("a")
       .attr("class", "bubble-label")
       .attr("href", (d) -> "##{encodeURIComponent(idValue(d))}")
@@ -192,60 +200,108 @@ Bubbles = () ->
 
     labelEnter.append("div")
       .attr("class", "bubble-label-value")
-      .text((d) -> d.count)
+      .text((d) -> rValue(d))
 
+    # label font size is determined based on the size of the bubble
+    # this sizing allows for a bit of overhang outside of the bubble
+    # - remember to add the 'px' at the end as we are dealing with 
+    #  styling divs
     label
       .style("font-size", (d) -> Math.max(8, rScale(rValue(d) / 2)) + "px")
-      .style("width", (d) -> rScale(rValue(d)) * 2.5 + "px")
+      .style("width", (d) -> 2.5 * rScale(rValue(d)) + "px")
 
+    # interesting hack to get the 'true' text width
+    # - create a span inside the label
+    # - add the text to this span
+    # - use the span to compute the nodes 'dx' value
+    #  which is how much to adjust the label by when
+    #  positioning it
+    # - remove the extra span
     label.append("span")
       .text((d) -> textValue(d))
       .each((d) -> d.dx = Math.max(2.5 * rScale(rValue(d)), this.getBoundingClientRect().width))
       .remove()
 
+    # reset the width of the label to the actual width
     label
       .style("width", (d) -> d.dx + "px")
-
+  
+    # compute and store each nodes 'dy' value - the 
+    # amount to shift the label down
+    # 'this' inside of D3's each refers to the actual DOM element
+    # connected to the data node
     label.each((d) -> d.dy = this.getBoundingClientRect().height)
 
   # ---
   # custom gravity to skew the bubble placement
   # ---
   gravity = (alpha) ->
+    # start with the center of the display
     cx = width / 2
     cy = height / 2
+    # use alpha to affect how much to push
+    # towards the horizontal or vertical
     ax = alpha / 8
     ay = alpha
-
+    
+    # return a function that will modify the
+    # node's x and y values
     (d) ->
       d.x += (cx - d.x) * ax
       d.y += (cy - d.y) * ay
 
   # ---
   # ---
-  collide = (alpha) ->
-    q = d3.geom.quadtree(data)
+  collide = (jitter) ->
     (d) ->
-      r = d.forceR + maxRadius + collisionPadding
-      nx1 = d.x - r
-      nx2 = d.x + r
-      ny1 = d.y - r
-      ny2 = d.y + r
-      q.visit (quad, x1, y1, x2, y2) ->
+      data.forEach (d2) ->
+        if d != d2
+          # use distance formula to find distance
+          # between two nodes
+          x = d.x - d2.x
+          y = d.y - d2.y
+          distance = Math.sqrt(x * x + y * y)
+          # find current 
+          r = d.forceR + d2.forceR + collisionPadding
+          if distance < r
+            distance = (distance - r) / distance * jitter
+            moveX = x * distance
+            moveY = y * distance
+            d.x -= moveX
+            d.y -= moveY
+            d2.x += moveX
+            d2.y += moveY
+
+
+  # ---
+  # ---
+  collideOld = (jitter) ->
+    # create new quad tree from data
+    quad = d3.geom.quadtree(data)
+
+    # return a function that modifies
+    # the x and y of a node
+    (d) ->
+      quad.visit (quad, x1, y1, x2, y2) ->
+        # check that we are at a leaf and
+        # not looking at the same node as the one
+        # we are positioning
         if quad.point && (quad.point != d)
+          # use distance formula to find distance
+          # between two nodes
           x = d.x - quad.point.x
           y = d.y - quad.point.y
-          l = Math.sqrt(x * x + y * y)
+          distance = Math.sqrt(x * x + y * y)
+          # find current 
           r = d.forceR + quad.point.forceR + collisionPadding
-          if l < r
-            l = (l - r) / l * alpha
-            x = x * l
-            y = y * l
-            d.x -= x
-            d.y -= y
-            quad.point.x += x
-            quad.point.y += y
-        x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1
+          if distance < r
+            distance = (distance - r) / distance * jitter
+            moveX = x * distance
+            moveY = y * distance
+            d.x -= moveX
+            d.y -= moveY
+            quad.point.x += moveX
+            quad.point.y += moveY
             
 
   # ---
@@ -266,7 +322,7 @@ Bubbles = () ->
   # ---
   # ---
   clear = () ->
-    location.replace("#!")
+    location.replace("#")
 
   # ---
   # ---
@@ -293,9 +349,11 @@ Bubbles = () ->
   # ---
   # ---
   updateActive = (id) ->
-    active = id
     node.classed("bubble-selected", (d) -> id == idValue(d))
-    d3.select("#status").html("<h3>The word <span class=\"active\">#{id}</span> is now active</h3>")
+    if id.length > 0
+      d3.select("#status").html("<h3>The word <span class=\"active\">#{id}</span> is now active</h3>")
+    else
+      d3.select("#status").html("<h3>No word is active</h3>")
 
   # ---
   # ---
@@ -320,14 +378,6 @@ Bubbles = () ->
     if !arguments.length
       return width
     width = _
-    chart
-
-  # ---
-  # ---
-  chart.margin = (_) ->
-    if !arguments.length
-      return margin
-    margin = _
     chart
 
   # ---
