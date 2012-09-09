@@ -22,7 +22,7 @@ Bubbles = () ->
   rValue = (d) -> parseInt(d.count)
 
   # function to define the 'id' of a data element
-  #  - used to bind the data to the force nodes
+  #  - used to bind the data uniquely to the force nodes
   #   and for url creation
   #  - should make it easier to switch out dataset
   #   for your own
@@ -403,11 +403,17 @@ root.plotData = (selector, data, plot) ->
     .datum(data)
     .call(plot)
 
+texts = [
+  {key:"sherlock",file:"top_sherlock.csv",name:"The Adventures of Sherlock Holmes"}
+  {key:"aesop",file:"top_aesop.csv",name:"Aesop's Fables"}
+  {key:"alice",file:"alice.csv",name:"Alice's Adventures in Wonderland"}
+  {key:"gulliver",file:"top_gulliver.csv",name:"Gulliver's Travels"}
+]
+
 # ---
 # jQuery document ready.
 # ---
 $ ->
-  
   # create a new Bubbles chart
   plot = Bubbles()
 
@@ -418,12 +424,35 @@ $ ->
   display = (data) ->
     plotData("#vis", data, plot)
 
+  # we are storing the current text in the search component
+  # just to make things easy
+  key = decodeURIComponent(location.search).replace("?","")
+  text = texts.filter((t) -> t.key == key)[0]
+
+  # default to the first text if something gets messed up
+  if !text
+    text = texts[0]
+
+  # select the current text in the drop-down
+  $("#text-select").val(key)
+
   # bind change in jitter range slider
   # to update the plot's jitter
   d3.select("#jitter")
     .on "input", () ->
       plot.jitter(parseFloat(this.output.value))
 
+  # bind change in drop down to change the
+  # search url and reset the hash url
+  d3.select("#text-select")
+    .on "change", (e) ->
+      key = $(this).val()
+      location.replace("#")
+      location.search = encodeURIComponent(key)
+
+  # set the book title from the text name
+  d3.select("#book-title").html(text.name)
+
   # load our data
-  d3.csv("data/top_sherlock.csv", display)
+  d3.csv("data/#{text.file}", display)
 
