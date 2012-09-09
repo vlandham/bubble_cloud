@@ -272,38 +272,6 @@ Bubbles = () ->
             d2.x += moveX
             d2.y += moveY
 
-
-  # ---
-  # ---
-  collideOld = (jitter) ->
-    # create new quad tree from data
-    quad = d3.geom.quadtree(data)
-
-    # return a function that modifies
-    # the x and y of a node
-    (d) ->
-      quad.visit (quad, x1, y1, x2, y2) ->
-        # check that we are at a leaf and
-        # not looking at the same node as the one
-        # we are positioning
-        if quad.point && (quad.point != d)
-          # use distance formula to find distance
-          # between two nodes
-          x = d.x - quad.point.x
-          y = d.y - quad.point.y
-          distance = Math.sqrt(x * x + y * y)
-          # find current 
-          r = d.forceR + quad.point.forceR + collisionPadding
-          if distance < r
-            distance = (distance - r) / distance * jitter
-            moveX = x * distance
-            moveY = y * distance
-            d.x -= moveX
-            d.y -= moveY
-            quad.point.x += moveX
-            quad.point.y += moveY
-            
-
   # ---
   # ---
   transformData = (rawData) ->
