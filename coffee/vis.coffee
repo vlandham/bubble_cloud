@@ -46,6 +46,20 @@ Bubbles = () ->
   jitter = 0.5
 
   # ---
+  # tweaks our dataset to get it into the
+  # format we want
+  # - for this dataset, we just need to
+  #  ensure the count is a number
+  # - for your own dataset, you might want
+  #  to tweak a bit more
+  # ---
+  transformData = (rawData) ->
+    rawData.forEach (d) ->
+      d.count = parseInt(d.count)
+      rawData.sort(() -> 0.5 - Math.random())
+    rawData
+
+  # ---
   # tick callback function will be executed for every
   # iteration of the force simulation
   # - moves force nodes towards their destinations
@@ -170,7 +184,7 @@ Bubbles = () ->
       .attr("class", "bubble-node")
       .attr("xlink:href", (d) -> "##{encodeURIComponent(idValue(d))}")
       .call(force.drag)
-      .call(link)
+      .call(connectEvents)
       .append("circle")
       .attr("r", (d) -> rScale(rValue(d)))
 
@@ -192,7 +206,7 @@ Bubbles = () ->
       .attr("class", "bubble-label")
       .attr("href", (d) -> "##{encodeURIComponent(idValue(d))}")
       .call(force.drag)
-      .call(link)
+      .call(connectEvents)
 
     labelEnter.append("div")
       .attr("class", "bubble-label-name")
@@ -251,20 +265,34 @@ Bubbles = () ->
       d.y += (cy - d.y) * ay
 
   # ---
+  # custom collision function to maintain spacing
+  # around nodes. Could use a quadtree to improve speed
+  # (which is what Mike's original version does)
   # ---
   collide = (jitter) ->
+    # return a function that modifies
+    # the x and y of a node
     (d) ->
       data.forEach (d2) ->
+        # check that we aren't comparing a node
+        # with itself
         if d != d2
           # use distance formula to find distance
           # between two nodes
           x = d.x - d2.x
           y = d.y - d2.y
           distance = Math.sqrt(x * x + y * y)
-          # find current 
-          r = d.forceR + d2.forceR + collisionPadding
-          if distance < r
-            distance = (distance - r) / distance * jitter
+          # find current minimum space between two nodes
+          # using the forceR that was set to match the 
+          # visible radius of the nodes
+          minDistance = d.forceR + d2.forceR + collisionPadding
+
+          # if the current distance is less then the minimum
+          # allowed then we need to push both nodes away from one another
+          if distance < minDistance
+            # scale the distance based on the jitter variable
+            distance = (distance - minDistance) / distance * jitter
+            # move our two nodes
             moveX = x * distance
             moveY = y * distance
             d.x -= moveX
@@ -272,58 +300,60 @@ Bubbles = () ->
             d2.x += moveX
             d2.y += moveY
 
-  # ---
-  # ---
-  transformData = (rawData) ->
-    rawData.forEach (d) ->
-      d.count = parseInt(d.count)
-      rawData.sort(() -> 0.5 - Math.random())
-    rawData
 
   # ---
+  # adds mouse events to element
   # ---
-  link = (d) ->
+  connectEvents = (d) ->
     d.on("click", click)
     d.on("mouseover", mouseover)
     d.on("mouseout", mouseout)
 
   # ---
+  # clears currently selected bubble
   # ---
   clear = () ->
     location.replace("#")
 
   # ---
+  # changes clicked bubble by modifying url
   # ---
   click = (d) ->
     location.replace("#" + encodeURIComponent(idValue(d)))
     d3.event.preventDefault()
 
   # ---
-  # ---
-  mouseover = (d) ->
-    node.classed("bubble-hover", (p) -> p == d)
-
-  # ---
-  # ---
-  mouseout = (d) ->
-    node.classed("bubble-hover", false)
-
-  # ---
+  # called when url after the # changes
   # ---
   hashchange = () ->
     id = decodeURIComponent(location.hash.substring(1)).trim()
     updateActive(id)
 
   # ---
+  # activates new node
   # ---
   updateActive = (id) ->
     node.classed("bubble-selected", (d) -> id == idValue(d))
+    # if no node is selected, id will be empty
     if id.length > 0
       d3.select("#status").html("<h3>The word <span class=\"active\">#{id}</span> is now active</h3>")
     else
       d3.select("#status").html("<h3>No word is active</h3>")
 
   # ---
+  # hover event
+  # ---
+  mouseover = (d) ->
+    node.classed("bubble-hover", (p) -> p == d)
+
+  # ---
+  # remove hover class
+  # ---
+  mouseout = (d) ->
+    node.classed("bubble-hover", false)
+
+  # ---
+  # public getter/setter for jitter variable
   # ---
   chart.jitter = (_) ->
     if !arguments.length
@@ -333,6 +363,7 @@ Bubbles = () ->
     chart
 
   # ---
+  # public getter/setter for height variable
   # ---
   chart.height = (_) ->
     if !arguments.length
@@ -341,6 +372,7 @@ Bubbles = () ->
     chart
 
   # ---
+  # public getter/setter for width variable
   # ---
   chart.width = (_) ->
     if !arguments.length
@@ -349,6 +381,7 @@ Bubbles = () ->
     chart
 
   # ---
+  # public getter/setter for radius function
   # ---
   chart.r = (_) ->
     if !arguments.length
@@ -389,7 +422,7 @@ $ ->
   # to update the plot's jitter
   d3.select("#jitter")
     .on "input", () ->
-      plot.jitter(+this.output.value)
+      plot.jitter(parseFloat(this.output.value))
 
   # load our data
   d3.csv("data/top_sherlock.csv", display)
