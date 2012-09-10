@@ -257,7 +257,7 @@ Bubbles = () ->
     # towards the horizontal or vertical
     ax = alpha / 8
     ay = alpha
-    
+
     # return a function that will modify the
     # node's x and y values
     (d) ->
@@ -265,8 +265,10 @@ Bubbles = () ->
       d.y += (cy - d.y) * ay
 
   # ---
-  # custom collision function to maintain spacing
-  # around nodes. Could use a quadtree to improve speed
+  # custom collision function to prevent
+  # nodes from touching
+  # This version is brute force
+  # we could use quadtree to speed up implementation
   # (which is what Mike's original version does)
   # ---
   collide = (jitter) ->
@@ -299,7 +301,6 @@ Bubbles = () ->
             d.y -= moveY
             d2.x += moveX
             d2.y += moveY
-
 
   # ---
   # adds mouse events to element
