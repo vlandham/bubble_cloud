@@ -1,5 +1,9 @@
 h1. Bubble Cloud Example Implementation
 
+Demo of a word bubble cloud in D3. 
+
+For more info, check out the tutorial on "vallandingham.me":http://vallandingham.me/
+
 h2. Usage
 
 h3. First Clone the Repository
@@ -9,13 +13,17 @@ git clone git@github.com:vlandham/bubble_cloud.git
 cd vis
 </pre>
 
-h3. You might consider creating a new branch for your Vis
+h3. Remove Google Analytics Code
 
-<pre>
-git checkout -b interesting_new_bar_chart
-</pre>
+To make things easy on myself, This is the same code that is used to
+power the live demo. As a consequence, my GA code is in there.
 
-h3. View built in example
+If you could be a nice person and remove or change that in your version,
+I'd appreciate it.
+
+Should be a script block around line @70@.
+
+h3. View Demo
 
 You can start up a local webserver by using python's simple server:
 
@@ -53,9 +61,15 @@ h2. Folder Organization
 * @/css/@
 ** put your stylesheets in here
 
-h2. Requirments
+h2. Requirements
 
 To startup the server, you either need @python@, or a bunch of @ruby@ gems (should be simplified in the future).
 
 Run @bundle install@ to get the gems needed. Gems listed in the Gemfile
+
+h2. License
+
+Released under the MIT license:
+
+"www.opensource.org/licenses/MIT":http://www.opensource.org/licenses/MIT
 

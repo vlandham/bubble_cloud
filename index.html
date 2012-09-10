@@ -33,8 +33,8 @@
       </select>
     <header>
     <h1>Bubble Cloud</h1>
-    <h2>The most frequently used words in:
-    <h2 id="book-title"></h2>
+    <h2>The most frequently used words in:</h2>
+      <h2 id="book-title"></h2>
     </header>
     <div id="main" role="main">
       <div id="vis"></div>
@@ -62,13 +62,11 @@
   <script src="js/libs/d3.v2.js"></script>
   <script type="text/coffeescript" src="coffee/vis.coffee"></script>
   <script type="text/javascript">
-    $(document).ready(function() {
-    });
   </script>
 
 
-  <script> // Change UA-XXXXX-X to be your site's ID
-    window._gaq = [['_setAccount','UAXXXXXXXX1'],['_trackPageview'],['_trackPageLoadTime']];
+  <script> 
+    window._gaq = [['_setAccount','UA-17355070-1'],['_trackPageview'],['_trackPageLoadTime']];
     Modernizr.load({
       load: ('https:' == location.protocol ? '//ssl' : '//www') + '.google-analytics.com/ga.js'
     });
