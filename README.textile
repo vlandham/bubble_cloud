@@ -25,13 +25,31 @@ Should be a script block around line @70@.
 
 h3. View Demo
 
-You can start up a local webserver by using python's simple server:
+Because of how D3 handles importing data, this tutorial should be viewed using a local webserver to serve the pages.
+
+h4. Python webserver
+
+You can start up a local webserver by using python's built-in simple server:
+
+*For Python 2.xx*
 
 <pre>
-python -m SimpleHTTTPServer -p 3000
+python -m SimpleHTTPServer -p 3000
 </pre>
 
-or @thin@ in ruby
+*For Python 3.xx*
+
+<pre>
+python -m http.server
+</pre>
+
+*This assumes you have Python availible from the command line.*
+
+On Windows, you will need to install Python. "Here is one tutorial for that":http://www.anthonydebarros.com/2011/10/15/setting-up-python-in-windows-7/
+
+h4. Ruby webserver
+
+The @thin@ webserver, a ruby gem, can also be used:
 
 <pre>
 thin start
@@ -60,6 +78,72 @@ h2. Folder Organization
 ** javascript goes here. JS Libraries in @libs@ directory
 * @/css/@
 ** put your stylesheets in here
+
+h3. Add your own data
+
+The format of the input data for each word set is a @.csv@ file that looks something like:
+
+<pre>
+name,count
+alice,147
+little,44
+# ...
+</pre>
+
+If you have your own word list in a similar csv file, you can add it to the drop down list and view it in the demo by following these instructions:
+
+h4. Add your .csv file to the @/data/@ directory
+
+Ensure your csv has a simple name, optimally @[title].csv@ where @[title]@ is a single word with no spaces or punctuation. 
+
+Then put your csv in the @/data@ directory along side the other csv files.
+
+h4. Add your word list to @index.html@
+
+First we will add an entry for your new word csv file to the @index.html@ page. The drop-down box is created in @index.html@ around line @28@. It looks like this:
+
+<pre>
+      <select id="text-select">
+        <option value="sherlock">Sherlock Holmes</option>
+        <option value="aesop">Aesop's Fables</option>
+        <option value="alice">Alice in Wonderland</option>
+        <option value="gulliver">Gulliver's Travels</option>
+      </select>
+</pre>
+
+You will want to add your title and a key associated with that title to this list. Let's say you have a csv file called @gatsby.csv@ that has word counts for the book 'The Great Gatsby', then your @select@ might look like this:
+
+<pre>
+      <select id="text-select">
+        <option value="gatsby">The Great Gatsby</option>
+        <option value="sherlock">Sherlock Holmes</option>
+        <option value="aesop">Aesop's Fables</option>
+        <option value="alice">Alice in Wonderland</option>
+        <option value="gulliver">Gulliver's Travels</option>
+      </select>
+</pre>
+
+The @value@ associated with the @option@ is just a key that we will use in @vis.coffee@ to load the right file.
+
+h4. Add entry in @vis.coffee@ texts
+
+Finally, we will add an entry to the @texts@ Object in @vis.coffee@ to associate our key with the file to load.
+
+@texts@ starts at line @407@ in @vis.coffee@. We need to add a new line that uses the key we put in our @option@ @value@ and the actual file name. In our example, we used the key @gatsby@ and our file's name is @gatsby.csv@, so the @text@ object would look like:
+
+<pre>
+texts = [
+  {key:"gatsby",file:"gatsby.csv",name:"The Great Gatsby"}
+  {key:"sherlock",file:"top_sherlock.csv",name:"The Adventures of Sherlock Holmes"}
+  {key:"aesop",file:"top_aesop.csv",name:"Aesop's Fables"}
+  {key:"alice",file:"alice.csv",name:"Alice's Adventures in Wonderland"}
+  {key:"gulliver",file:"top_gulliver.csv",name:"Gulliver's Travels"}
+]
+</pre>
+
+To make things easier, ensure the order of the entries in @texts@ matches the order of the @option@ values in @index.html@. 
+
+Reloading the page, you should see your new bubble cloud appear!
 
 h2. Requirements
 
