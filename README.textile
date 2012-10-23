@@ -79,7 +79,7 @@ h2. Folder Organization
 * @/css/@
 ** put your stylesheets in here
 
-h3. Add your own data
+h2. Add your own data
 
 The format of the input data for each word set is a @.csv@ file that looks something like:
 
