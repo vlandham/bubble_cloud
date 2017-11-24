@@ -1,5 +1,7 @@
 h1. Bubble Cloud Example Implementation
 
+**UPDATE: check out new D3v4 version here: http://vallandingham.me/bubble_charts_with_d3v4.html**
+
 Demo of a word bubble cloud in D3. 
 
 For more info, check out the tutorial on "vallandingham.me":http://vallandingham.me/
